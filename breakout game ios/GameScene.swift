@@ -102,5 +102,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let location = touch.location(in: self)
             paddle.position.x = location.x
         }
+        func didBegin(_ contact: SKPhysicsContact) {
+            if contact.bodyA.node?.name == "brick" ||
+                contact.bodyA.node?.name == "brick" {
+                print("You Win!")
+                brick.removeFromParent()
+                ball.removeFromParent()
+            }
+            if contact.bodyA.node?.name == "loseZone" ||
+                contact.bodyA.node?.name == "loseZone" {
+                print("You Lose!")
+                ball.removeFromParent()
+            }
+        }
     }
 }
