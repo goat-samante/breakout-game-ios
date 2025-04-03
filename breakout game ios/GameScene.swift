@@ -9,7 +9,7 @@ import SpriteKit
 import GameplayKit
 
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var ball = SKShapeNode()
     var paddle = SKSpriteNode()
@@ -19,6 +19,9 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         createBackground()
         makeLoseZone()
+        physicsWorld.contactDelegate = self
+        self.physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        kickBall()
     }
     func createBackground() {
         let stars = SKTexture(imageNamed: "Stars")
@@ -57,6 +60,10 @@ class GameScene: SKScene {
         makeBall()
         makePaddle()
         makeBrick()
+    }
+    func kickBall() {
+        ball.physicsBody?.isDynamic = true
+        ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
     }
     func makePaddle() {
         paddle.removeFromParent()
