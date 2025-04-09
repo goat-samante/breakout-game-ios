@@ -13,7 +13,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var ball = SKShapeNode()
     var paddle = SKSpriteNode()
-    var brick = SKSpriteNode()
+    var bricks = [SKSpriteNode]()
     var loseZone = SKSpriteNode()
     var playLabel = SKLabelNode()
     var livesLabel = SKLabelNode()
@@ -21,6 +21,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var playingGame = false
     var score = 0
     var lives = 3
+    var removedBricks = 0
     
     override func didMove(to view: SKView) {
         createBackground()
@@ -65,7 +66,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func resetGame() {
         makeBall()
         makePaddle()
-        makeBrick()
+        makeBricks()
         updateLabels()
     }
     func kickBall() {
@@ -85,14 +86,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         paddle.physicsBody?.isDynamic = false
         addChild(paddle)
     }
-    func makeBrick() {
-        brick.removeFromParent()
-        brick = SKSpriteNode(color: .blue, size: CGSize(width: 50, height: 20))
-        brick.position = CGPoint(x: frame.midX, y: frame.maxY - 50)
-        brick.name = "brick"
+    func makeBrick(x: Int, y: Int, color: UIColor) {
+        let brick = SKSpriteNode(color: color, size: CGSize(width: 50, height: 20))
+        brick.position = CGPoint(x: x, y: y)
         brick.physicsBody = SKPhysicsBody(rectangleOf: brick.size)
         brick.physicsBody?.isDynamic = false
         addChild(brick)
+        bricks.append(brick)
     }
     func makeLoseZone() {
         loseZone = SKSpriteNode(color: .red, size: CGSize(width: frame.width, height: 50))
@@ -151,9 +151,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         func didBegin(_ contact: SKPhysicsContact) {
-            if contact.bodyA.node?.name == "brick" ||
-                contact.bodyA.node?.name == "brick" {
-                gameOver(winner: true)
+            for brick in bricks {
+                if contact.bodyA.node == brick ||
+                    contact.bodyB.node == brick {
+                    score += 1
+                    updateLabels()
+                    if brick.color = .blue {
+                        brick.color = .orange
+                    }
+                    else if brick.color == .orange {
+                        brick.color = .green
+                    }
+                    else {
+                        brick.removeFromParent()
+                        removedBricks += 1
+                        if removedBricks == bricks.count {
+                            gameOver(winner: true)
+                        }
+                    }
+            }
             }
             if contact.bodyA.node?.name == "loseZone" ||
                 contact.bodyA.node?.name == "loseZone" {
@@ -169,6 +185,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         else {
             playLabel.text = "You lose! Tap to play again"
+        }
+    }
+    func makeBricks() {
+        for brick in bricks {
+            if brick.parent != nil {
+                brick.removeFromParent()
+            }
+        }
+        bricks.removeAll()
+        removedBricks = 0
+        
+        let count = Int(frame.width) / 55
+        let xOffset = (Int(frame.width) - (count * 55)) / 2 + Int(frame.minX) + 25
+        let y = Int(frame.maxY) - 65
+        for i in 0..<count {
+            let x = i * 55 + xOffset
+            makeBrick(x: x, y: y, color: .green)
         }
     }
     }
