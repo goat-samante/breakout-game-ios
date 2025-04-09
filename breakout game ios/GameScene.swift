@@ -156,7 +156,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     contact.bodyB.node == brick {
                     score += 1
                     updateLabels()
-                    if brick.color = .blue {
+                    if brick.color == .blue {
                         brick.color = .orange
                     }
                     else if brick.color == .orange {
