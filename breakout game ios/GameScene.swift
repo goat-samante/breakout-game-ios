@@ -12,6 +12,7 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var ball = SKShapeNode()
+    var ball2 = SKShapeNode()
     var paddle = SKSpriteNode()
     var bricks = [SKSpriteNode]()
     var loseZone = SKSpriteNode()
@@ -44,27 +45,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             starsBackground.run(moveForever)
         }
     }
-    func makeBall() {
-        ball.removeFromParent()
-        ball = SKShapeNode(circleOfRadius: 10)
-        ball.position = CGPoint(x: frame.midX, y: frame.midY)
-        ball.strokeColor = .black
-        ball.fillColor = .yellow
-        ball.name = "ball"
+    func makeBall(_ targetBall: SKShapeNode) {
+        targetBall.removeFromParent()
+        targetBall.path = CGPath(ellipseIn: CGRect(x: -10, y: -10, width: 20, height: 20), transform: nil)
+                                 targetBall.strokeColor = .black
+                                 targetBall.fillColor = .yellow
+        targetBall.name = "ball"
         
-        ball.physicsBody = SKPhysicsBody(circleOfRadius: 10)
-        ball.physicsBody?.isDynamic = false
-        ball.physicsBody?.usesPreciseCollisionDetection = true
-        ball.physicsBody?.friction = 0
-        ball.physicsBody?.affectedByGravity = false
-        ball.physicsBody?.restitution = 1
-        ball.physicsBody?.linearDamping = 0
-        ball.physicsBody?.contactTestBitMask = (ball.physicsBody?.collisionBitMask)!
+        targetBall.position = CGPoint(x: frame.midX, y: frame.midY)
+        targetBall.physicsBody = SKPhysicsBody(circleOfRadius: 10)
+        targetBall.physicsBody?.isDynamic = true
+        targetBall.physicsBody?.usesPreciseCollisionDetection = true
+        targetBall.physicsBody?.friction = 0
+        targetBall.physicsBody?.affectedByGravity = false
+        targetBall.physicsBody?.restitution = 1
+        targetBall.physicsBody?.linearDamping = 0
+        targetBall.physicsBody?.contactTestBitMask = (ball.physicsBody?.collisionBitMask)!
         
-        addChild(ball)
+        addChild(targetBall)
     }
     func resetGame() {
-        makeBall()
+        makeBall(ball)
+        makeBall(ball2)
         makePaddle()
         makeBricks()
         updateLabels()
@@ -72,6 +74,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func kickBall() {
         ball.physicsBody?.isDynamic = true
         ball.physicsBody?.applyImpulse(CGVector(dx: Int.random(in: -5...5), dy: 5))
+            
+        ball2.physicsBody?.isDynamic = true
+        ball2.physicsBody?.applyImpulse(CGVector(dx: Int.random(in: -5...5), dy: 5))
     }
     func updateLabels() {
         scoreLabel.text = "Score: \(score)"
@@ -150,34 +155,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             }
         }
-        func didBegin(_ contact: SKPhysicsContact) {
+            func didBegin(_ contact: SKPhysicsContact) {
             for brick in bricks {
-                if contact.bodyA.node == brick ||
-                    contact.bodyB.node == brick {
-                    score += 1
-                    ball.physicsBody!.velocity.dx *= CGFloat(1.02)
-                    ball.physicsBody!.velocity.dy *= CGFloat(1.02)
-                    updateLabels()
-                    if brick.color == .blue {
-                        brick.color = .orange
-                    }
-                    else if brick.color == .orange {
-                        brick.color = .green
-                    }
-                    else {
-                        brick.removeFromParent()
-                        removedBricks += 1
-                        if removedBricks == bricks.count {
-                            gameOver(winner: true)
+                if (contact.bodyA.node == brick || contact.bodyB.node == brick),
+                   (contact.bodyA.node == ball || contact.bodyB.node == ball ||
+                    contact.bodyA.node == ball2 || contact.bodyB.node == ball2) {
+                    
+                        score += 1
+                        ball.physicsBody!.velocity.dx *= CGFloat(1.02)
+                        ball.physicsBody!.velocity.dy *= CGFloat(1.02)
+                        updateLabels()
+                        if brick.color == .blue {
+                            brick.color = .orange
+                        }
+                        else if brick.color == .orange {
+                            brick.color = .green
+                        }
+                        else {
+                            brick.removeFromParent()
+                            removedBricks += 1
+                            if removedBricks == bricks.count {
+                                gameOver(winner: true)
+                            }
                         }
                     }
+                }
+                if (contact.bodyA.node == ball || contact.bodyB.node == ball ||
+                    contact.bodyA.node == ball2 || contact.bodyB.node == ball2),
+                   (contact.bodyA.node?.name == "loseZone" || contact.bodyB.node?.name == "loseZone") {
+                    gameOver(winner: false)
+                }
             }
-            }
-            if contact.bodyA.node?.name == "loseZone" ||
-                contact.bodyA.node?.name == "loseZone" {
-                gameOver(winner: false)
-            }
-        }
     func gameOver(winner: Bool) {
         playingGame = false
         playLabel.alpha = 1
